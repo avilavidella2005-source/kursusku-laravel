@@ -1,4 +1,4 @@
-// Import Bootstrap & jQuery (jika memakai Vite)
+// Baris import './bootstrap'; SUDAH DIHAPUS karena file-nya tidak ada
 import 'bootstrap';
 import $ from 'jquery';
 window.$ = window.jQuery = $;

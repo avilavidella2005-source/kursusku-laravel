@@ -1,42 +1,55 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\HomeController;
 use Illuminate\Http\Request;
+use App\Http\Controllers\HomeController;
 
-// 1. Route Beranda
+// 1. Route Beranda (Pertemuan 7)
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// 2. Route Form Pendaftaran
-Route::get('/pendaftaran', function () {
-    $courses = [
-        1 => ['name' => 'Web Dasar'],
-        2 => ['name' => 'PHP Dasar'],
-        3 => ['name' => 'Laravel Dasar'],
-    ];
-    return view('enrollments.create', compact('courses'));
+// 2. Data Dummy Kursus
+$coursesData = [
+    1 => ['name' => 'Web Dasar', 'quota' => 30, 'registered' => 12],
+    2 => ['name' => 'PHP Dasar', 'quota' => 30, 'registered' => 18],
+    3 => ['name' => 'PHP Lanjutan', 'quota' => 25, 'registered' => 24],
+    4 => ['name' => 'Laravel Fundamental', 'quota' => 25, 'registered' => 25],
+    5 => ['name' => 'MySQL Dasar', 'quota' => 20, 'registered' => 0],
+    6 => ['name' => 'UI Web Dasar', 'quota' => 35, 'registered' => 9],
+];
+
+// 3. Route Form Pendaftaran (Tampilkan Halaman)
+Route::get('/pendaftaran', function () use ($coursesData) {
+    return view('enrollments.create', ['courses' => $coursesData]);
 })->name('enrollments.create');
 
-// 3. Route Proses Form (Preview)
+// 4. Route Proses Form (Validasi Data)
 Route::post('/pendaftaran/preview', function (Request $request) {
-    $data = $request->validate([
+    // Validasi disesuaikan dengan field form baru
+    $request->validate([
         'name' => ['required', 'string', 'min:3', 'max:100'],
         'email' => ['required', 'email'],
+        'phone' => ['required', 'string', 'max:15'],
+        'program_studi' => ['required', 'string'],
         'course_id' => ['required', 'integer'],
+        'method' => ['required', 'string'],
+        'participant_type' => ['required', 'string'],
+        'interest' => ['required', 'string'],
+        'notes' => ['nullable', 'string'],
     ]);
 
-    return back()
-        ->with('success', 'Form lolos validasi. Database akan ditambahkan pada pertemuan berikutnya.')
-        ->withInput();
+    // Jika validasi lolos, kembalikan ke halaman form dengan pesan sukses
+    return back()->with('success', 'Pendaftaran berhasil divalidasi! Data Anda telah kami terima.')->withInput();
 })->name('enrollments.preview');
 
-// 4. Route JSON Ajax (Pertemuan 9)
-Route::get('/courses/{course}/availability', function (int $course) {
-    $availability = [
-        1 => ['course' => 'Web Dasar', 'remaining' => 12],
-        2 => ['course' => 'PHP Dasar', 'remaining' => 8],
-        3 => ['course' => 'Laravel Dasar', 'remaining' => 4],
-    ];
-    abort_unless(isset($availability[$course]), 404);
-    return response()->json($availability[$course]);
+// 5. Route JSON Ajax (Cek Ketersediaan Kursi)
+Route::get('/courses/{course}/availability', function (int $course) use ($coursesData) {
+    abort_unless(isset($coursesData[$course]), 404);
+    
+    $data = $coursesData[$course];
+    $remaining = max(0, $data['quota'] - $data['registered']);
+    
+    return response()->json([
+        'course' => $data['name'], 
+        'remaining' => $remaining
+    ]);
 })->name('courses.availability');
