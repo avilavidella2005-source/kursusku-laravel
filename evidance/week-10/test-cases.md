@@ -1,18 +1,18 @@
-# Test Cases - Pertemuan 10
+# Test Cases - Pertemuan 10 (CRUD Course)
 
-Dokumen ini berisi hasil pengujian manual untuk fitur **Create** dan **Read** pada tabel `courses` di aplikasi KursusKu.
+Dokumen ini berisi hasil pengujian manual untuk fitur **Create** dan **Read** pada tabel `courses` di aplikasi KursusKu menggunakan Laravel dan MySQL.
 
 ## Tabel Pengujian
 
 | No | Skenario | Input Utama | Hasil yang Diharapkan | Status |
 |:---:|:---|:---|:---|:---:|
-| 1 | **Simpan data valid** | Semua field valid (Kode unik, Nama, Biaya, Kuota, Tanggal, Status) | Data tersimpan, redirect ke index, pesan sukses tampil | ✅ Lulus |
-| 2 | **Kode kosong** | `code` kosong | Validasi gagal, data tidak tersimpan, muncul pesan error | ✅ Lulus |
-| 3 | **Kode duplikat** | `code` = `WEB-101` (kode yang sudah ada) | Ditolak oleh rule unique, muncul pesan *"The code has already been taken."* | ✅ Lulus |
-| 4 | **Nama kosong** | `name` kosong | Validasi gagal, muncul pesan *"The name field is required."* | ✅ Lulus |
+| 1 | **Simpan data valid** | Semua field valid (Kode unik, Nama, Biaya, Kuota, Tanggal, Status) | Data tersimpan, redirect ke halaman index, pesan sukses tampil | ✅ Lulus |
+| 2 | **Kode kosong** | `code` dikosongkan | Validasi gagal, data tidak tersimpan, muncul pesan error | ✅ Lulus |
+| 3 | **Kode duplikat** | `code` = `WEB-101` (kode yang sudah ada di database) | Ditolak oleh rule unique, muncul pesan *"The code has already been taken."* | ✅ Lulus |
+| 4 | **Nama kosong** | `name` dikosongkan | Validasi gagal, muncul pesan *"The name field is required."* | ✅ Lulus |
 | 5 | **Biaya negatif** | `fee` = `-1000` | Ditolak karena aturan `min:0`, muncul pesan error | ✅ Lulus |
 | 6 | **Kuota 0** | `quota` = `0` | Ditolak karena aturan `min:1`, muncul pesan error | ✅ Lulus |
-| 7 | **Status tidak valid** | `status` = `active` (diubah manual via inspect element) | Ditolak karena hanya boleh `draft`, `open`, atau `closed` | ✅ Lulus |
+| 7 | **Status tidak valid** | `status` = `active` (diubah manual via Inspect Element) | Ditolak karena hanya boleh `draft`, `open`, atau `closed` | ✅ Lulus |
 | 8 | **Daftar tampil ulang** | Reload halaman `/courses` | Data tetap ada karena berasal dari MySQL (Eloquent) | ✅ Lulus |
 
 ---

@@ -3,11 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\CourseController; // Tambahan untuk Week 10
 
 // 1. Route Beranda (Pertemuan 7)
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// 2. Data Dummy Kursus
+// 2. Data Dummy Kursus (Untuk Form Pendaftaran & Ajax)
 $coursesData = [
     1 => ['name' => 'Web Dasar', 'quota' => 30, 'registered' => 12],
     2 => ['name' => 'PHP Dasar', 'quota' => 30, 'registered' => 18],
@@ -24,7 +25,6 @@ Route::get('/pendaftaran', function () use ($coursesData) {
 
 // 4. Route Proses Form (Validasi Data)
 Route::post('/pendaftaran/preview', function (Request $request) {
-    // Validasi disesuaikan dengan field form baru
     $request->validate([
         'name' => ['required', 'string', 'min:3', 'max:100'],
         'email' => ['required', 'email'],
@@ -37,7 +37,6 @@ Route::post('/pendaftaran/preview', function (Request $request) {
         'notes' => ['nullable', 'string'],
     ]);
 
-    // Jika validasi lolos, kembalikan ke halaman form dengan pesan sukses
     return back()->with('success', 'Pendaftaran berhasil divalidasi! Data Anda telah kami terima.')->withInput();
 })->name('enrollments.preview');
 
@@ -53,3 +52,8 @@ Route::get('/courses/{course}/availability', function (int $course) use ($course
         'remaining' => $remaining
     ]);
 })->name('courses.availability');
+
+// ==========================================
+// ROUTE BARU UNTUK WEEK 10 (CRUD DATABASE)
+// ==========================================
+Route::resource('courses', CourseController::class);
