@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreCourseRequest;
+use App\Http\Requests\UpdateCourseRequest;
 use App\Models\Course;
-use Illuminate\Http\Request;
 
 class CourseController extends Controller
 {
@@ -25,55 +26,51 @@ class CourseController extends Controller
     }
 
     /**
-     * Menyimpan kursus baru ke database.
+     * Menyimpan kursus baru ke database (Validasi via StoreCourseRequest).
      */
-    public function store(Request $request)
+    public function store(StoreCourseRequest $request)
     {
-        $data = $request->validate([
-            'code' => ['required', 'max:20', 'unique:courses,code'],
-            'name' => ['required', 'max:120'],
-            'description' => ['nullable', 'string'],
-            'fee' => ['required', 'integer', 'min:0'],
-            'quota' => ['required', 'integer', 'min:1', 'max:500'],
-            'start_date' => ['required', 'date'],
-            'status' => ['required', 'in:draft,open,closed'],
-        ]);
-
-        Course::create($data);
+        Course::create($request->validated());
 
         return to_route('courses.index')
             ->with('success', 'Kursus berhasil ditambahkan.');
     }
 
     /**
-     * Menampilkan detail satu kursus (belum dipakai minggu ini).
+     * Menampilkan detail satu kursus (Route Model Binding).
      */
     public function show(Course $course)
     {
-        //
+        return view('courses.show', compact('course'));
     }
 
     /**
-     * Menampilkan form edit kursus (belum dipakai minggu ini).
+     * Menampilkan form edit kursus.
      */
     public function edit(Course $course)
     {
-        //
+        return view('courses.edit', compact('course'));
     }
 
     /**
-     * Menyimpan perubahan data kursus (belum dipakai minggu ini).
+     * Menyimpan perubahan data kursus (Validasi via UpdateCourseRequest).
      */
-    public function update(Request $request, Course $course)
+    public function update(UpdateCourseRequest $request, Course $course)
     {
-        //
+        $course->update($request->validated());
+
+        return to_route('courses.show', $course)
+            ->with('success', 'Kursus berhasil diperbarui.');
     }
 
     /**
-     * Menghapus kursus dari database (belum dipakai minggu ini).
+     * Menghapus kursus dari database.
      */
     public function destroy(Course $course)
     {
-        //
+        $course->delete();
+
+        return to_route('courses.index')
+            ->with('success', 'Kursus berhasil dihapus.');
     }
 }
