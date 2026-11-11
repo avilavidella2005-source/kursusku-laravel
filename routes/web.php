@@ -3,9 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\CourseController; // Tambahan untuk Week 10
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\EnrollmentController; // Tambahan Week 12
 
-// 1. Route Beranda (Pertemuan 7)
+// ==========================================
+// ROUTE PERTEMUAN 7 - 9 (Beranda & Form Ajax)
+// ==========================================
+
+// 1. Route Beranda
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // 2. Data Dummy Kursus (Untuk Form Pendaftaran & Ajax)
@@ -20,8 +25,8 @@ $coursesData = [
 
 // 3. Route Form Pendaftaran (Tampilkan Halaman)
 Route::get('/pendaftaran', function () use ($coursesData) {
-    return view('enrollments.create', ['courses' => $coursesData]);
-})->name('enrollments.create');
+    return view('enrollments.form_pendaftaran', ['courses' => $coursesData]);
+})->name('enrollments.preview.form');
 
 // 4. Route Proses Form (Validasi Data)
 Route::post('/pendaftaran/preview', function (Request $request) {
@@ -54,6 +59,11 @@ Route::get('/courses/{course}/availability', function (int $course) use ($course
 })->name('courses.availability');
 
 // ==========================================
-// ROUTE BARU UNTUK WEEK 10 (CRUD DATABASE)
+// ROUTE PERTEMUAN 10-11 (CRUD Course)
 // ==========================================
 Route::resource('courses', CourseController::class);
+
+// ==========================================
+// ROUTE PERTEMUAN 12 (Relasi Enrollment)
+// ==========================================
+Route::resource('enrollments', EnrollmentController::class)->only(['index', 'create', 'store']);
