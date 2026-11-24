@@ -1,0 +1,74 @@
+Draft Artikel Ilmiah - Pertemuan 13
+Judul Sementara:
+Pengembangan Sistem Pendaftaran Kursus Berbasis Laravel dengan Pencarian dan Pagination Server-Side
+
+Penulis:
+[AVILA VIDELLA] / [2524231]
+
+1. Problem Statement (Latar Belakang)
+Pada pengembangan aplikasi KursusKu, fitur utama yang menampilkan daftar kursus masih menggunakan cara dasar, yaitu mengambil seluruh data dari database dan menampilkannya dalam satu halaman penuh. Ketika jumlah data Course (kursus) semakin bertambah (dalam pengujian ini mencapai 28 data), daftar panjang tanpa fitur pencarian dan pembatasan halaman menjadi tidak efisien. Pengguna akan kesulitan mencari kursus spesifik secara manual, dan halaman web akan memakan waktu lebih lama untuk dimuat (loading lambat) karena harus merender semua data sekaligus.
+
+2. Gap Sederhana (Kesenjangan)
+Kondisi awal aplikasi belum memiliki mekanisme untuk memfilter data berdasarkan kebutuhan pengguna secara spesifik. Kebutuhan yang belum terpenuhi adalah:
+
+Pengguna tidak bisa mencari kursus berdasarkan kode atau nama.
+
+Pengguna tidak bisa menyaring kursus berdasarkan status (Open, Closed, Draft).
+
+Halaman menampilkan terlalu banyak data tanpa pembagian halaman (pagination).
+
+Setiap kali melakukan pencarian, halaman harus me-reload seluruh layout.
+
+3. Metode Pengembangan
+Metode yang dilakukan dalam pembaruan fitur ini adalah:
+
+Identifikasi Kebutuhan: Menambahkan fitur data discovery (penemuan data) berupa form GET untuk pencarian (parameter q) dan filter status (parameter status).
+
+Implementasi Controller: Memodifikasi CourseController@index menggunakan Eloquent Query Builder (when()) untuk pencarian dinamis dan method paginate(10)->withQueryString() untuk membatasi 10 data per halaman tanpa menghilangkan parameter URL.
+
+Implementasi View (Blade): Membuat form GET di antarmuka dan menggunakan @forelse untuk menangani kondisi jika data tidak ditemukan (Empty State).
+
+Progressive Enhancement (Ajax): Menambahkan fitur opsional berupa live search menggunakan jQuery Ajax dengan debounce 300ms. Sistem mendeteksi request partial=1 untuk mengembalikan respons berupa potongan HTML tabel saja, bukan halaman penuh.
+
+Pengujian: Menguji skenario fungsional dengan dan tanpa JavaScript.
+
+4. Tabel Skenario Uji (Test Matrix)
+Berikut adalah hasil pengujian fungsionalitas yang telah dilakukan:
+
+No	Skenario	Input / Langkah	Expected (Harapan)	Actual (Hasil Nyata)	Status
+1	0 Hasil	Mencari tidak-ada-xyz	Empty state tampil, tanpa error	Muncul tulisan "Tidak ada kursus yang sesuai pencarian/filter."	Pass
+2	1 Hasil	Mencari code unik UI-101	Tepat 1 Course tampil	Tabel hanya menampilkan 1 baris data (UI-101).	Pass
+3	> 10 Hasil	Membuka halaman index	Page 1 max 10 + pagination	Tampil 10 baris data dan tombol Next/Previous di bawah.	Pass
+4	Keyword Spasi	Mencari Kursus Dummy	Keyword terbaca benar	Menampilkan data DUMMY-1, DUMMY-10, dst.	Pass
+5	Filter + Page 2	Pilih status Open, klik page 2	q/status tetap terjaga	URL tetap membawa parameter yang sama, data terfilter.	Pass
+5. Hasil Awal (Pengujian)
+Berdasarkan pengujian yang dilakukan:
+
+Fitur pencarian dan filter berbasis Server-Side (menggunakan Form GET) berjalan dengan baik. URL menyimpan state sehingga halaman bisa di-bookmark.
+
+Pagination berhasil memotong data menjadi 10 item per halaman dan parameter pencarian tidak hilang saat berpindah halaman (berkat withQueryString()).
+
+Fitur Progressive Enhancement (Ajax) berhasil diimplementasikan. Saat JavaScript aktif, pengetikan di kotak pencarian langsung memperbarui tabel di bawahnya (live search) tanpa me-reload halaman. Hal ini dibuktikan dengan adanya request XHR (Ajax) dengan parameter partial=1 pada tab Network di DevTools.
+
+Saat JavaScript dimatikan, aplikasi tetap dapat digunakan dengan baik karena tombol "Cari" konvensional (fallback non-JS) tetap berfungsi.
+
+6. Referensi (Tambahan)
+Dokumentasi Resmi Laravel. (2026). Pagination. Diakses dari https://laravel.com/docs/pagination
+
+Dokumentasi Resmi Laravel. (2026). Database: Query Builder. Diakses dari https://laravel.com/docs/queries
+
+Jurnal/Sumber tentang Progressive Enhancement pada Web Development. (Sesuaikan dengan referensi yang Anda miliki).
+
+Cara Menyimpan ke PDF:
+Buka Microsoft Word atau Google Docs.
+
+Copy semua teks di atas dan Paste ke dalam dokumen baru.
+
+Rapikan formatnya (tebal, miring, tabel).
+
+Klik File -> Save As (atau Download) -> Pilih format PDF.
+
+Beri nama file: Draft-Artikel-Ilmiah-Pertemuan13.pdf.
+
+Catatan Penting: Bagian Actual di tabel uji saya isi dengan hasil yang seharusnya (sesuai kode yang sudah kita buat). Jika pada saat Anda tes ada yang berbeda, silakan ubah teks Actual-nya sesuai kenyataan. Jangan mengarang hasil jika ada yang gagal!
+
