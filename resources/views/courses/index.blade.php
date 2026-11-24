@@ -19,55 +19,83 @@
         </div>
     @endif
 
+    {{-- ===== FORM SEARCH & FILTER ===== --}}
+    <form method="GET" action="{{ route('courses.index') }}" class="row g-2 mb-3" id="filter-form">
+        <div class="col-md-6">
+            {{-- Tambahan ID: live-search --}}
+            <input type="search" name="q" id="live-search" value="{{ $search ?? '' }}"
+                   class="form-control" placeholder="Cari kode atau nama kursus">
+        </div>
+
+        <div class="col-md-3">
+            {{-- Tambahan ID: status-filter --}}
+            <select name="status" id="status-filter" class="form-select">
+                <option value="">Semua status</option>
+                <option value="open"   @selected(($status ?? '') === 'open')>Open</option>
+                <option value="closed" @selected(($status ?? '') === 'closed')>Closed</option>
+                <option value="draft"  @selected(($status ?? '') === 'draft')>Draft</option>
+            </select>
+        </div>
+
+        <div class="col-md-3 d-flex gap-2">
+            <button class="btn btn-primary">Cari</button>
+            <a href="{{ route('courses.index') }}" class="btn btn-outline-secondary">Reset</a>
+        </div>
+    </form>
+
     <div class="card shadow-sm border-0">
         <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover mb-0">
-                    <thead class="table-dark">
-                        <tr>
-                            <th class="py-3 px-3">Kode</th>
-                            <th class="py-3 px-3">Nama</th>
-                            <th class="py-3 px-3">Biaya</th>
-                            <th class="py-3 px-3">Kuota</th>
-                            <th class="py-3 px-3">Mulai</th>
-                            <th class="py-3 px-3">Status</th>
-                            <th class="py-3 px-3 text-center" style="width: 220px;">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse ($courses as $course)
-                            <tr>
-                                <td class="px-3 fw-bold">{{ $course->code }}</td>
-                                <td class="px-3">{{ $course->name }}</td>
-                                <td class="px-3">Rp {{ number_format($course->fee, 0, ',', '.') }}</td>
-                                <td class="px-3">{{ $course->quota }}</td>
-                                <td class="px-3">{{ $course->start_date->format('d/m/Y') }}</td>
-                                <td class="px-3">
-                                    <span class="badge {{ $course->status == 'open' ? 'bg-success' : ($course->status == 'closed' ? 'bg-danger' : 'bg-warning text-dark') }}">
-                                        {{ ucfirst($course->status) }}
-                                    </span>
-                                </td>
-                                <td class="px-3 text-center">
-                                    <div class="d-flex gap-1 justify-content-center">
-                                        <a href="{{ route('courses.show', $course) }}" class="btn btn-sm btn-outline-primary">Detail</a>
-                                        <a href="{{ route('courses.edit', $course) }}" class="btn btn-sm btn-outline-warning">Edit</a>
-                                        <form method="POST" action="{{ route('courses.destroy', $course) }}" onsubmit="return confirm('Hapus kursus ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger">Hapus</button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="7" class="text-center py-4 text-muted">Belum ada data kursus.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+            {{-- Memanggil file partial yang sudah dibuat di Langkah 2 --}}
+            @include('courses._results')
         </div>
     </div>
 </div>
 @endsection
+
+{{-- SCRIPT AJAX (LANGSUNG DITEMPEL DI SINI) --}}
+@push('scripts')
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script>
+    $(document).ready(function() {
+        let searchTimer;
+
+        function loadCourses(url = '{{ route('courses.index') }}') {
+            const q = $('#live-search').val();
+            const status = $('#status-filter').val();
+
+            // Efek loading transparan
+            $('#course-results').css('opacity', '0.5');
+
+            $.get(url, { q: q, status: status, partial: 1 })
+                .done(function(html) {
+                    $('#course-results').replaceWith(html);
+                    $('#course-results').css('opacity', '1');
+                })
+                .fail(function() {
+                    console.error('Gagal memuat hasil course.');
+                    $('#course-results').css('opacity', '1');
+                });
+        }
+
+        // 1. Live search (Debounce 300ms)
+        $(document).on('input', '#live-search', function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(function() {
+                loadCourses();
+            }, 300);
+        });
+
+        // 2. Filter status (Langsung jalan saat diganti)
+        $(document).on('change', '#status-filter', function() {
+            loadCourses();
+        });
+
+        // 3. Pagination Ajax (Klik page 2 tanpa reload)
+        $(document).on('click', '#course-results .pagination a', function(e) {
+            e.preventDefault();
+            const url = $(this).attr('href');
+            loadCourses(url);
+        });
+    });
+</script>
+@endpush

@@ -185,5 +185,8 @@
             animate();
         });
     </script>
+
+    <!-- ===== TAMBAHKAN BARIS INI ===== -->
+    @stack('scripts')
 </body>
 </html>
