@@ -4,16 +4,21 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\CourseController;
-use App\Http\Controllers\EnrollmentController; // Tambahan Week 12
+use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\ProfileController;
 
 // ==========================================
-// ROUTE PERTEMUAN 7 - 9 (Beranda & Form Ajax)
+// 1. ROUTE PUBLIK & LOGIN
 // ==========================================
-
-// 1. Route Beranda
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-// 2. Data Dummy Kursus (Untuk Form Pendaftaran & Ajax)
+// Route untuk Halaman Login Admin (Sesuai Screenshot Anda)
+Route::get('/admin/login', function () {
+    // Ini akan memanggil file resources/views/auth/login-admin.blade.php
+    return view('auth.login-admin'); 
+})->name('admin.login');
+
+// Data dummy untuk keperluan testing katalog kursus
 $coursesData = [
     1 => ['name' => 'Web Dasar', 'quota' => 30, 'registered' => 12],
     2 => ['name' => 'PHP Dasar', 'quota' => 30, 'registered' => 18],
@@ -23,12 +28,10 @@ $coursesData = [
     6 => ['name' => 'UI Web Dasar', 'quota' => 35, 'registered' => 9],
 ];
 
-// 3. Route Form Pendaftaran (Tampilkan Halaman)
 Route::get('/pendaftaran', function () use ($coursesData) {
     return view('enrollments.form_pendaftaran', ['courses' => $coursesData]);
 })->name('enrollments.preview.form');
 
-// 4. Route Proses Form (Validasi Data)
 Route::post('/pendaftaran/preview', function (Request $request) {
     $request->validate([
         'name' => ['required', 'string', 'min:3', 'max:100'],
@@ -41,29 +44,35 @@ Route::post('/pendaftaran/preview', function (Request $request) {
         'interest' => ['required', 'string'],
         'notes' => ['nullable', 'string'],
     ]);
-
-    return back()->with('success', 'Pendaftaran berhasil divalidasi! Data Anda telah kami terima.')->withInput();
+    return back()->with('success', 'Pendaftaran berhasil divalidasi!')->withInput();
 })->name('enrollments.preview');
 
-// 5. Route JSON Ajax (Cek Ketersediaan Kursi)
 Route::get('/courses/{course}/availability', function (int $course) use ($coursesData) {
     abort_unless(isset($coursesData[$course]), 404);
-    
     $data = $coursesData[$course];
     $remaining = max(0, $data['quota'] - $data['registered']);
-    
-    return response()->json([
-        'course' => $data['name'], 
-        'remaining' => $remaining
-    ]);
+    return response()->json(['course' => $data['name'], 'remaining' => $remaining]);
 })->name('courses.availability');
 
-// ==========================================
-// ROUTE PERTEMUAN 10-11 (CRUD Course)
-// ==========================================
-Route::resource('courses', CourseController::class);
 
 // ==========================================
-// ROUTE PERTEMUAN 12 (Relasi Enrollment)
+// 2. ROUTE TERLINDUNGI (Wajib Login)
 // ==========================================
-Route::resource('enrollments', EnrollmentController::class)->only(['index', 'create', 'store']);
+Route::middleware(['auth', 'verified'])->group(function () {
+    
+    // PERUBAHAN UTAMA: /dashboard dialihkan ke halaman Profil
+    Route::get('/dashboard', function () {
+        return redirect()->route('profile.edit');
+    })->name('dashboard');
+
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Route untuk Manajemen Kursus & Pendaftaran
+    Route::resource('courses', CourseController::class);
+    Route::resource('enrollments', EnrollmentController::class)->only(['index', 'create', 'store']);
+});
+
+// Memanggil route autentikasi bawaan Laravel (login, register, logout, dll)
+require __DIR__.'/auth.php';

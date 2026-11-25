@@ -1,12 +1,24 @@
-<!doctype html>
-<html lang="id">
+<!DOCTYPE html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+
     <title>@yield('title', 'KursusKu')</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+
+    <!-- Scripts (Vite) -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- TAMBAHAN: Bootstrap 5 CSS untuk merapikan form & card -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
     <style>
-        /* Animasi Latar Belakang */
         body {
             margin: 0;
             padding: 0;
@@ -24,8 +36,6 @@
             z-index: -1;
             pointer-events: none;
         }
-
-        /* Header & Navbar Biru Navy */
         .header-utama {
             background-color: #1e3a8a;
             color: white;
@@ -76,8 +86,6 @@
             border-bottom: 2px solid #ffffff;
             padding-bottom: 2px;
         }
-
-        /* Konten Utama */
         main {
             position: relative;
             z-index: 1;
@@ -86,10 +94,10 @@
 </head>
 <body class="d-flex flex-column min-vh-100">
 
-    <!-- KANVAS ANIMASI -->
+    <!-- KANVAS ANIMASI JARING-JARING -->
     <canvas id="bg-canvas"></canvas>
 
-    <!-- HEADER & NAVBAR -->
+    <!-- HEADER & NAVBAR KUSTOM -->
     <div class="header-utama">
         <h1>KursusKu</h1>
         <p>Belajar Teknologi, Bangun Masa Depan</p>
@@ -99,12 +107,27 @@
         <div class="container">
             <ul>
                 <li><a href="{{ route('home') }}">Beranda</a></li>
-                <li><a href="{{ route('home') }}#keunggulan">Keunggulan</a></li>
-                <li><a href="{{ route('home') }}#kursus">Katalog</a></li>
-                <li><a href="{{ route('home') }}#alur">Cara Daftar</a></li>
-                <li><a href="{{ route('home') }}#media">Media</a></li>
-                <li><a href="{{ route('home') }}#kontak">Kontak</a></li>
-                <li><a href="{{ route('courses.index') }}" class="menu-daftar">Kelola Kursus</a></li>
+                <li><a href="#">Keunggulan</a></li>
+                <li><a href="#">Katalog</a></li>
+                <li><a href="#">Cara Daftar</a></li>
+                <li><a href="#">Media</a></li>
+                <li><a href="#">Kontak</a></li>
+                
+                @auth
+                    @if(Auth::user()->role === 'admin')
+                        <li><a href="{{ route('courses.index') }}" class="menu-daftar">Kelola Kursus</a></li>
+                    @endif
+                    
+                    <li><a href="{{ route('profile.edit') }}">Profil Saya</a></li>
+                    <li>
+                        <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                            @csrf
+                            <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();" style="cursor: pointer;" class="text-warning fw-bold">Logout</a>
+                        </form>
+                    </li>
+                @else
+                    <li><a href="{{ route('login') }}" class="menu-daftar">Login</a></li>
+                @endauth
             </ul>
         </div>
     </div>
@@ -127,11 +150,9 @@
             const canvas = document.getElementById('bg-canvas');
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
-            
             let width = canvas.width = window.innerWidth;
             let height = canvas.height = window.innerHeight;
-            
-            const color = 'rgba(30, 58, 138, '; // Biru Navy
+            const color = 'rgba(30, 58, 138, ';
             let particles = [];
             
             for (let i = 0; i < 80; i++) {
@@ -151,13 +172,10 @@
 
             function animate() {
                 ctx.clearRect(0, 0, width, height);
-                
                 particles.forEach(p => {
-                    p.x += p.vx;
-                    p.y += p.vy;
+                    p.x += p.vx; p.y += p.vy;
                     if (p.x < 0 || p.x > width) p.vx *= -1;
                     if (p.y < 0 || p.y > height) p.vy *= -1;
-                    
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
                     ctx.fillStyle = color + '0.6)';
@@ -169,10 +187,9 @@
                         let dx = particles[i].x - particles[j].x;
                         let dy = particles[i].y - particles[j].y;
                         let distance = Math.sqrt(dx * dx + dy * dy);
-                        
                         if (distance < 150) {
                             ctx.beginPath();
-                            ctx.strokeStyle = color + (0.15 - distance/1000) + ')'; 
+                            ctx.strokeStyle = color + (0.15 - distance/1000) + ')';
                             ctx.lineWidth = 0.8;
                             ctx.moveTo(particles[i].x, particles[i].y);
                             ctx.lineTo(particles[j].x, particles[j].y);
@@ -185,8 +202,5 @@
             animate();
         });
     </script>
-
-    <!-- ===== TAMBAHKAN BARIS INI ===== -->
-    @stack('scripts')
 </body>
 </html>
